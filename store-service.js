@@ -22,23 +22,87 @@ function readJsonFile(filePath) {
   });
 }
 
+// Helper function to write data to a JSON file
+function writeJsonFile(filePath, data) {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8', (err) => {
+      if (err) {
+        reject(`Error writing to file: ${filePath}`);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 // initialize() function to read items and categories JSON files
 function initialize() {
   return new Promise((resolve, reject) => {
     // Read items.json file
     readJsonFile(path.join(__dirname, 'data', 'items.json'))
       .then((itemsData) => {
-        items = itemsData;  // Assign parsed data to the items array
-        // After items.json is successfully loaded, read categories.json
+        items = itemsData;  
         return readJsonFile(path.join(__dirname, 'data', 'categories.json'));
       })
       .then((categoriesData) => {
-        categories = categoriesData;  // Assign parsed data to the categories array
-        resolve("Data successfully loaded");  // Resolve when both files are read and parsed
+        categories = categoriesData;  
+        resolve("Data successfully loaded");  
       })
       .catch((err) => {
-        reject(err);  // Reject with the error message if any of the file operations fail
+         // Reject with the error message if any of the file operations fail
+        reject(err); 
       });
+  });
+}
+
+// addItem(itemData) function to add a new item
+function addItem(itemData) {
+  return new Promise((resolve, reject) => {
+    // set the "published" property if it's undefined
+    if (itemData.published === undefined) {
+      itemData.published = false; // Default to false if not provided
+    }
+
+    // set the "id" property to the length of the array + 1
+    itemData.id = items.length + 1;
+
+    // add the new item to the "items" array
+    items.push(itemData);
+
+    // save the updated items array back to the JSON file
+    writeJsonFile(path.join(__dirname, 'data', 'items.json'), items)
+      .then(() => {
+        resolve(itemData); // Return the newly added item
+      })
+      .catch((err) => {
+        reject(`Error saving updated items: ${err}`);
+      });
+  });
+}
+
+// Function to get items by category
+function getItemsByCategory(category) {
+  return new Promise((resolve, reject) => {
+      const filteredItems = items.filter(item => item.category === parseInt(category)); // Convert to integer
+      if (filteredItems.length > 0) {
+          resolve(filteredItems);
+      } else {
+          reject('No items found for the given category');
+      }
+  });
+}
+
+// Function to get items by minimum postDate
+function getItemsByMinDate(minDateStr) {
+  return new Promise((resolve, reject) => {
+      // Convert the string to Date object
+      const minDate = new Date(minDateStr); 
+      const filteredItems = items.filter(item => new Date(item.postDate) >= minDate);
+      if (filteredItems.length > 0) {
+          resolve(filteredItems);
+      } else {
+          reject('No items found for the given date');
+      }
   });
 }
 
@@ -76,10 +140,25 @@ function getCategories() {
   });
 }
 
+function getItemById(id) {
+  return new Promise((resolve, reject) => {
+    const item = items.find(item => item.id === parseInt(id));  // Find the item by its ID
+    if (item) {
+      resolve(item);  // Return the item if found
+    } else {
+      reject(`Item with ID ${id} not found`);  // Reject if no item is found
+    }
+  });
+}
+
 // Export functions for use in the server.js file
 module.exports = {
   initialize,
   getAllItems,
   getPublishedItems,
-  getCategories
+  getCategories,
+  addItem,
+  getItemsByCategory,
+  getItemsByMinDate,
+  getItemById
 };
