@@ -6,7 +6,7 @@ I declare that this assignment is my own work in accordance with Seneca  Academi
 Name: Yonathan Tsegaye
 Student ID: 147314231
 Date: 03/02/2025
-Cyclic Web App URL: _______________________________________________________
+Replit Web App URL: https://replit.com/@ytsegaye1/web322-app
 GitHub Repository URL: https://github.com/yonirl/web322-app
 
 ********************************************************************************/ 
@@ -19,7 +19,6 @@ const PORT = process.env.PORT || 8080;
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2
 const streamifier = require('streamifier');
-const storeService = require('./store-service');
 
 // Serve static files from the "public" folder
 app.use(express.static(path.join(__dirname, "public")));

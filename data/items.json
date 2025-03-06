@@ -134,5 +134,14 @@
     "featureImage": "http://res.cloudinary.com/dlxifcpza/image/upload/v1741225972/n6bkzgci4eqfmvi8uqxq.jpg",
     "published": false,
     "id": 14
+  },
+  {
+    "title": "",
+    "price": "",
+    "body": "",
+    "category": "1",
+    "featureImage": "http://res.cloudinary.com/dlxifcpza/image/upload/v1741231494/bllcal7ryd14bnbmfhbi.jpg",
+    "published": false,
+    "id": 15
   }
 ]
