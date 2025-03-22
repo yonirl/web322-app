@@ -1,11 +1,11 @@
 /*********************************************************************************
 
-WEB322 – Assignment 03
+WEB322 – Assignment 04
 I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part *  of this assignment has been copied manually or electronically from any other source (including 3rd party web sites) or distributed to other students.
 
 Name: Yonathan Tsegaye
 Student ID: 147314231
-Date: 03/02/2025
+Date: 03/16/2025
 Replit Web App URL: https://replit.com/@ytsegaye1/web322-app
 GitHub Repository URL: https://github.com/yonirl/web322-app
 
@@ -19,6 +19,11 @@ const PORT = process.env.PORT || 8080;
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2
 const streamifier = require('streamifier');
+const exphbs = require('express-handlebars');
+
+app.engine('hbs', exphbs.engine({
+    extname: '.hbs',  
+  }));
 
 // Serve static files from the "public" folder
 app.use(express.static(path.join(__dirname, "public")));
@@ -33,6 +38,12 @@ cloudinary.config({
 const upload = multer({
     limits: {filesize: 10 * 1024 * 1024}
 });
+
+app.engine('hbs', exphbs.engine({
+    extname: '.hbs',  
+}));
+
+app.set('view engine', 'hbs');
 
 app.get("/items/add", (req, res) => {  
     res.sendFile(path.join(__dirname, "views", "addItem.html"));  
