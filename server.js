@@ -45,8 +45,10 @@ app.engine('hbs', exphbs.engine({
 
 app.set('view engine', 'hbs');
 
-app.get("/items/add", (req, res) => {  
-    res.sendFile(path.join(__dirname, "views", "addItem.html"));  
+
+
+app.get("/items/add", (req, res) => {    
+    res.render('addItem')
 });
 
 app.get('/item/:id', (req, res) => {
@@ -140,19 +142,48 @@ app.post("/items/add", upload.single("featureImage"), (req, res) => {
     }
 });
 
+app.use(function(req, res, next) {
+    let route = req.path.substring(1);
+    app.locals.activeRoute = "/" + (isNaN(route.split('/')[1]) ? route.replace(/\/(?!.*)/, "") : route.replace(/\/(.*)/, ""));
+    app.locals.viewingCategory = req.query.category;
+    next();
+});
+
+const hbs = exphbs.create({
+    extname: '.hbs',
+    helpers: {
+        navLink: function(url, options) {
+            let activeClass = (url === app.locals.activeRoute) ? 'active' : '';
+            return `<li class="${activeClass}"><a href="${url}">${options.fn(this)}</a></li>`;
+        },
+        equal: function(lvalue, rvalue, options) {
+            if (arguments.length < 3)
+                throw new Error("Handlebars Helper equal needs 2 parameters");
+            if (lvalue != rvalue) {
+                return options.inverse(this);
+            } else {
+                return options.fn(this);
+            }
+        }
+    }
+});
+
+app.engine('hbs', hbs.engine);
+
 // Redirect root route ("/") to "/about"
 app.get("/", (req, res) => {
-    console.log("Redirecting / to /about");
-    res.redirect("/about");
+    console.log("Redirecting / to /shop");
+    res.redirect("/shop");
 });
 
 // Serve about.html when visiting "/about"
 app.get("/about", (req, res) => {
     console.log("GET /about request received");
-    res.sendFile(path.join(__dirname, "views", "about.html"));
+    res.render("about");
 });
 
 // Route for "/shop" to return published items
+/*
 app.get('/shop', (req, res) => {
     console.log("GET /shop request received");
     storeService.getPublishedItems()
@@ -165,8 +196,51 @@ app.get('/shop', (req, res) => {
             res.status(500).json({ message: err });
         });
 });
+*/
+app.get("/shop", async (req, res) => {
+    // Declare an object to store properties for the view
+    let viewData = {};
+  
+    try {
+      // declare empty array to hold "item" objects
+      let items = [];
+  
+      // if there's a "category" query, filter the returned items by category
+      if (req.query.category) {
+        // Obtain the published "item" by category
+        items = await itemData.getPublishedItemsByCategory(req.query.category);
+      } else {
+        // Obtain the published "items"
+        items = await itemData.getPublishedItems();
+      }
+  
+      // sort the published items by itemDate
+      items.sort((a, b) => new Date(b.itemDate) - new Date(a.itemDate));
+  
+      // get the latest item from the front of the list (element 0)
+      let item = items[0];
+  
+      // store the "items" and "item" data in the viewData object (to be passed to the view)
+      viewData.items = items;
+      viewData.item = item;
+    } catch (err) {
+      viewData.message = "no results";
+    }
+  
+    try {
+      // Obtain the full list of "categories"
+      let categories = await itemData.getCategories();
+  
+      // store the "categories" data in the viewData object (to be passed to the view)
+      viewData.categories = categories;
+    } catch (err) {
+      viewData.categoriesMessage = "no results";
+    }
+  
+    // render the "shop" view with all of the data (viewData)
+    res.render("shop", { data: viewData });
+  });
 
-// Route for "/items" to return all items
 app.get('/items', (req, res) => {
     console.log("GET /items request received");
 
@@ -174,52 +248,116 @@ app.get('/items', (req, res) => {
     const { category, minDate } = req.query;
 
     if (category) {
-        storeService.getItemsByCategory(category)
+        // Use the new function to fetch published items filtered by category
+        storeService.getPublishedItemsByCategory(category)
             .then((filteredItems) => {
                 console.log(`Sending ${filteredItems.length} items for category ${category}`);
-                res.json(filteredItems);
+                
+                // Render the 'items' template and pass the filtered items
+                res.render("items", { items: filteredItems });
             })
             .catch((err) => {
                 console.error("Error fetching items by category:", err);
-                res.status(500).json({ message: err });
+                // Render an error message on the items page itself
+                res.render("items", { message: "Error fetching items by category" });
             });
+    
     } else if (minDate) {
         storeService.getItemsByMinDate(minDate)
             .then((filteredItems) => {
                 console.log(`Sending ${filteredItems.length} items with postDate >= ${minDate}`);
-                res.json(filteredItems);
+                // Render the 'items' template and pass the filtered items
+                res.render("items", { items: filteredItems });
             })
             .catch((err) => {
                 console.error("Error fetching items by minDate:", err);
-                res.status(500).json({ message: err });
+                // Render an error message on the items page itself
+                res.render("items", { message: "Error fetching items by date" });
             });
     } else {
+        // Fetch all items if no filter is provided
         storeService.getAllItems()
             .then((allItems) => {
                 console.log(`Sending ${allItems.length} items`);
-                res.json(allItems);
+                // Render the 'items' template and pass the items
+                res.render("items", { items: allItems });
             })
             .catch((err) => {
                 console.error("Error fetching all items:", err);
-                res.status(500).json({ message: err });
+                // Render an error message on the items page itself
+                res.render("items", { message: "Error fetching items" });
             });
     }
 });
 
-
 // Route for "/categories" to return all categories
 app.get('/categories', (req, res) => {
     console.log("GET /categories request received");
+
+    // Fetch categories from the storeService
     storeService.getCategories()
         .then((categories) => {
+            // If categories are fetched successfully, render the "categories" template and pass the categories to it
             console.log(`Sending ${categories.length} categories`);
-            res.json(categories);
+            res.render("categories", { categories: categories });
         })
         .catch((err) => {
+            // If there is an error fetching categories, render the "categories" template with an error message
             console.error("Error fetching categories:", err);
-            res.status(500).json({ message: err });
+            res.render("categories", { message: "No results" });
         });
 });
+
+// Route for Shop Id
+app.get('/shop/:id', async (req, res) => {
+
+    // Declare an object to store properties for the view
+    let viewData = {};
+  
+    try{
+  
+        // declare empty array to hold "item" objects
+        let items = [];
+  
+        // if there's a "category" query, filter the returned items by category
+        if(req.query.category){
+            // Obtain the published "items" by category
+            items = await itemData.getPublishedItemsByCategory(req.query.category);
+        }else{
+            // Obtain the published "items"
+            items = await itemData.getPublishedItems();
+        }
+  
+        // sort the published items by itemDate
+        items.sort((a,b) => new Date(b.itemDate) - new Date(a.itemDate));
+  
+        // store the "items" and "item" data in the viewData object (to be passed to the view)
+        viewData.items = items;
+  
+    }catch(err){
+        viewData.message = "no results";
+    }
+  
+    try{
+        // Obtain the item by "id"
+        viewData.item = await itemData.getItemById(req.params.id);
+    }catch(err){
+        viewData.message = "no results"; 
+    }
+  
+    try{
+        // Obtain the full list of "categories"
+        let categories = await itemData.getCategories();
+  
+        // store the "categories" data in the viewData object (to be passed to the view)
+        viewData.categories = categories;
+    }catch(err){
+        viewData.categoriesMessage = "no results"
+    }
+  
+    // render the "shop" view with all of the data (viewData)
+    res.render("shop", {data: viewData})
+  });
 
 // Handle unmatched routes
 app.use((req, res) => {

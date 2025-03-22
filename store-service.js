@@ -66,6 +66,11 @@ function addItem(itemData) {
     // set the "id" property to the length of the array + 1
     itemData.id = items.length + 1;
 
+    // set the "postDate" property to the current date (YYYY-MM-DD)
+    const currentDate = new Date();
+    const formattedDate = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${currentDate.getDate()}`;
+    itemData.postDate = formattedDate; // Add the current date as postDate
+
     // add the new item to the "items" array
     items.push(itemData);
 
@@ -151,6 +156,22 @@ function getItemById(id) {
   });
 }
 
+function getPublishedItemsByCategory(category) {
+  return new Promise((resolve, reject) => {
+      // Get all items (assuming you already have a function to get all items)
+      getAllItems()
+          .then((items) => {
+              // Filter items that are published and match the given category
+              const filteredItems = items.filter(item => item.published && item.category == category);
+              resolve(filteredItems);
+          })
+          .catch((err) => {
+              console.error("Error fetching items by category:", err);
+              reject(err);
+          });
+  });
+}
+
 // Export functions for use in the server.js file
 module.exports = {
   initialize,
@@ -160,5 +181,6 @@ module.exports = {
   addItem,
   getItemsByCategory,
   getItemsByMinDate,
-  getItemById
+  getItemById,
+  getPublishedItemsByCategory
 };
