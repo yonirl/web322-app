@@ -1,6 +1,8 @@
 <div class="row">
     <div class="col-md-12">
-        <h2>Items</h2>
+        <h2>Items
+            <a href="/Items/add" class="btn btn-success pull-right">Add Post</a>
+        </h2>
         <hr />
         
         <!-- Render the table of items -->
@@ -14,6 +16,7 @@
                         <th>Price</th>
                         <th>Category</th>
                         <th>Published</th>
+                        <th></th> <!-- Empty header for the "Remove" button column -->
                     </tr>
                 </thead>
                 <tbody>
@@ -22,10 +25,14 @@
                     <tr>
                         <td>{{this.id}}</td>
                         <td>{{this.title}}</td>
-                        <td>{{this.postDate}}</td>
+                        <td>{{#formatDate this.postDate}}{{/formatDate}}</td>
                         <td>{{this.price}}</td>
                         <td><a href="/items?category={{this.category}}">{{this.category}}</a></td>
                         <td>{{this.published}}</td>
+                        <!-- Add the "remove" button at the end of the row -->
+                        <td>
+                            <a href="/items/delete/{{this.id}}" class="btn btn-danger">Remove</a>
+                        </td>
                     </tr>
                     {{/each}}
                 </tbody>

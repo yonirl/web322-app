@@ -1,65 +1,53 @@
 <div class="row">
   <section class="main col-md-9">
-    <!-- Show the post section only if data.post is available -->
-    {{#if data.post}}
+    {{#if data.item}}
       <item>
         <div class="row">
           <div class="col-4">
-            <!-- Title of the current post -->
-            <h2>{{post.title}}</h2>
-            <!-- Feature image for the current post -->
-            <img src="{{post.featureImage}}" alt="Feature Image" style="width:100%" />
+            <h2>{{data.item.title}}</h2>
+            <!-- Image of the item -->
+            <img src="{{data.item.featureImage}}" alt="Feature Image" style="width:100%" />
           </div>
-
           <div class="col-8">
             <br /><br />
             <div class="row">
               <div class="col-12">
-                <!-- Post body using the #safeHTML helper to render HTML -->
-                <div>{{#safeHTML post.body}}</div>
+                <div>{{#safeHTML data.item.body}}{{/safeHTML}}</div>
                 <br /><br />
-                <!-- Price, Category, and Last Updated fields -->
-                <strong>Price:</strong> ${{post.price}}<br />
-                <strong>Category:</strong> {{post.category}}<br />
-                <strong>Last Updated:</strong> {{post.postDate}}
+                <strong>Price:</strong> ${{data.item.price}}<br />
+                <strong>Category:</strong> {{data.item.category}}<br />
+                <strong>Last Updated:</strong> {{#formatDate data.item.postDate}}{{/formatDate}}<br />
               </div>
             </div>
           </div>
         </div>
       </item>
     {{else}}
-      <!-- Display message if there is no post to show -->
       <div class="col-md-12 text-center">
         <h2>{{data.message}}</h2>
-        <p>Please try another Post / Category</p>
+        <p>Please try another item or category</p>
       </div>
     {{/if}}
   </section>
 
   <aside class="col-md-3">
     <br /><br />
-    <h4>Items</h4>
-
-    {{#if data.posts}}
+    {{#if data.items}}
+      <h4>Items</h4>
       <ul class="list-group">
-        {{#each data.posts}}
+        {{#each data.items}}
           <a href="/shop/{{id}}?category={{../viewingCategory}}" class="list-group-item">{{title}}</a>
         {{/each}}
       </ul>
-    {{else}}
-      <p>No items available in this category.</p>
     {{/if}}
 
-    <!-- Show Categories list only if data.categories is available and not empty -->
     {{#if data.categories}}
       <h4>Categories</h4>
       <ul class="list-group">
         {{#each data.categories}}
-          <a href="/shop?category={{this}}" class="list-group-item">{{this}}</a>
+          <a href="/shop?category={{id}}" class="list-group-item">{{category}}</a>
         {{/each}}
       </ul>
-    {{else}}
-      <p>No categories available.</p>
     {{/if}}
   </aside>
 </div>
